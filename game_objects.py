@@ -19,16 +19,15 @@ class Directions ():
         return self.__dx
     def dy (self) -> float:
         return self.__dy
-UP = Directions (angle = math.pi / 2)
-DOWN = Directions (angle = 3 * math.pi / 2)
-LEFT = Directions (angle = math.pi)
-RIGHT = Directions (angle = 0)
+UP = Directions (dx = 0, dy = -1)
+DOWN = Directions (dx = 0, dy = 1)
+LEFT = Directions (dx = -1, dy = 0)
+RIGHT = Directions (dx = 1, dy = 0)
 STOP = Directions (dx = 0, dy = 0)
-UP_LEFT = Directions (angle = 3 * math.pi / 4)
-UP_RIGHT = Directions (angle = math.pi / 4)
-DOWN_LEFT = Directions (angle = 5 * math.pi / 4)
-DOWN_RIGHT = Directions (angle = 7 * math.pi / 4)
-#Не верите - стройте тригонометрич. окружность
+UP_LEFT = Directions (dx = -1, dy = -1)
+UP_RIGHT = Directions (dx = 1, dy = -1)
+DOWN_LEFT = Directions (dx = -1, dy = 1)
+DOWN_RIGHT = Directions (dx = 1, dy = 1)
 
 #Ни один объект не имеет проверку на коллизии. приходится делать вручную
 class GameObject:

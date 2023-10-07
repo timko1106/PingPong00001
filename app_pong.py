@@ -37,9 +37,9 @@ class AppPong(App):
         py = player.get_y()
         if py <= 0:
             player.set_y (1)
-            player.set_direction (UP)
-        if py + player.get_height () >= window_height:
             player.set_direction (DOWN)
+        if py + player.get_height () >= window_height:
+            player.set_direction (UP)
     #По формуле окружности. Кстати она выводится через пифагора
     def __intersect_circle (x0 : float, y0 : float, r : float, x : float, y : float) -> bool:
         return (x - x0) ** 2 + (y - y0) ** 2 <= r * r
@@ -100,9 +100,9 @@ class AppPong(App):
             self.__ball.set_direction (Directions (dx = add[0], dy = add[1]))
     #Проверка клавиатуры
     def __check_player_keyboard (up_key : int, down_key : int, player : PlayerBlock) -> None:
-        if pyray.is_key_down(down_key):
+        if pyray.is_key_down(up_key):
             player.set_direction (UP)
-        elif pyray.is_key_down(up_key):
+        elif pyray.is_key_down(down_key):
             player.set_direction (DOWN)
     #Куда проще старой логики
     def _check_logic(self) -> None:
