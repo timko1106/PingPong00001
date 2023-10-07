@@ -1,35 +1,50 @@
 import pyray
-from math import sqrt
+import math
+#Направление движения. через угол или проекции на OX,OY
+class Directions ():
+    def __init__ (self, **kwargs) -> None:
+        if 'angle' in kwargs:
+            self.__dx = math.cos (kwargs['angle'])
+            self.__dy = math.sin (kwargs['angle'])
+        elif 'dx' in kwargs and 'dy' in kwargs:
+            self.__dx,self.__dy = kwargs['dx'], kwargs['dy']
+        else:
+            raise ValueError ("Bad init args")
+    def getangle (self) -> float:#Radians
+        alpha = math.acos (self.__dx)
+        if self.__dy < 0:
+            alpha = 2 * math.pi - alpha
+        return alpha
+    def dx (self) -> float:
+        return self.__dx
+    def dy (self) -> float:
+        return self.__dy
+UP = Directions (angle = math.pi / 2)
+DOWN = Directions (angle = 3 * math.pi / 2)
+LEFT = Directions (angle = math.pi)
+RIGHT = Directions (angle = 0)
+STOP = Directions (dx = 0, dy = 0)
+UP_LEFT = Directions (angle = 3 * math.pi / 4)
+UP_RIGHT = Directions (angle = math.pi / 4)
+DOWN_LEFT = Directions (angle = 5 * math.pi / 4)
+DOWN_RIGHT = Directions (angle = 7 * math.pi / 4)
+#Не верите - стройте тригонометрич. окружность
 
-
+#Ни один объект не имеет проверку на коллизии. приходится делать вручную
 class GameObject:
-    __directions = {
-        "up": (0, -1),
-        "down": (0, 1),
-        "left": (-1, 0),
-        "right": (1, 0),
-        "up_left": (-1 / sqrt(2), -1 / sqrt(2)),
-        "up_right": (1 / sqrt(2), -1 / sqrt(2)),
-        "down_left": (-1 / sqrt(2), 1 / sqrt(2)),
-        "down_right": (1 / sqrt(2), 1 / sqrt(2)),
-        "stop": (0, 0)
-    }
-
     def __init__(
             self,
             x: int, y: int,
             color: pyray.Color,
-            speed: int = 0, direction: str = "stop"
+            speed: int = 0, direction: Directions = STOP
     ) -> None:
+        if not (type (direction) is Directions):
+            raise ValueError ("Invalid direction!!!")
         self._x = self._real_x = x
         self._y = self._real_y = y
         self._color = color
         self._speed = speed
 
-        if direction in GameObject.__directions:
-            self._x_direction, self._y_direction = GameObject.__directions[direction]
-        else:
-            raise ValueError("Неправильно указано направление")
         self._direction = direction
 
     def set_x(self, x: int) -> None:
@@ -68,20 +83,18 @@ class GameObject:
     def set_speed(self, speed: int) -> None:
         self._speed = speed
 
-    def set_direction(self, direction: str) -> None:
-        if direction in GameObject.__directions:
-            self._x_direction, self._y_direction = GameObject.__directions[direction]
-        else:
-            raise ValueError("Неверно указано направление")
+    def set_direction(self, direction: Directions) -> None:
+        if not (type (direction) is Directions):
+            raise ValueError ("Needs Directions type!")
         self._direction = direction
 
     def get_direction(self) -> str:
         return self._direction
 
     def move(self, dt: float) -> None:
-        self._real_x += self._speed * self._x_direction * dt
+        self._real_x += self._speed * self._direction.dx() * dt
         self._x = int(self._real_x)
-        self._real_y += self._speed * self._y_direction * dt
+        self._real_y += self._speed * self._direction.dy() * dt
         self._y = int(self._real_y)
 
     def draw(self) -> None:
@@ -94,7 +107,7 @@ class GameObjectRectangle(GameObject):
             x: int, y: int,
             width: int, height: int,
             color: pyray.Color,
-            speed: int = 0, direction: str = "stop"
+            speed: int = 0, direction: Directions = STOP
     ) -> None:
         super().__init__(x, y, color, speed, direction)
 
@@ -134,7 +147,7 @@ class GameObjectCircle(GameObject):
             x: int, y: int,
             r: int,
             color: pyray.Color,
-            speed: int = 0, direction: str = "stop"
+            speed: int = 0, direction: Directions = STOP
     ) -> None:
         super().__init__(x, y, color, speed, direction)
 
