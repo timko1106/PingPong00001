@@ -8,6 +8,12 @@ from ball import Ball
 from player_block import PlayerBlock
 import game_objects
 from game_objects import Directions, DOWN,UP,LEFT,RIGHT,DOWN_LEFT,DOWN_RIGHT,UP_LEFT,UP_RIGHT,STOP
+import enum
+
+class State (enum.Enum):
+    DEFAULT = 0
+    STOP = 1
+    LOSE = 2
 
 #Класс приложения пинг-понга
 class AppPong(App):
@@ -15,7 +21,8 @@ class AppPong(App):
             self,
             width: int = 720, height: int = 480,
             title: str = "PONG",
-            bg_color: pyray.Color = colors.BLACK
+            bg_color: pyray.Color = colors.BLACK,
+            lives_limit : int = 6
     ) -> None:
         super().__init__(width, height, title, bg_color)
         # Тут задаём значения не сразу, так как нужно получить размеры объекта
@@ -27,6 +34,9 @@ class AppPong(App):
             self._WINDOW_WIDTH - self.__right_player.get_width(),
             self._WINDOW_HEIGHT // 2 - self.__right_player.get_height() // 2
         )
+        self.__current_state = State.STOP
+        self.__lives_limit = lives_limit
+        self.__has_lives = lives_limit
 
         self.__ball = Ball(x=self._WINDOW_WIDTH // 2, y=self._WINDOW_HEIGHT // 2)
         # выбираем случайное направления старта
@@ -84,6 +94,7 @@ class AppPong(App):
             self.__ball.set_y (self._WINDOW_HEIGHT - br - 1)
             add = (direction.dx (), -direction.dy ())
         if bx - br <= 0:
+            self.__has_lives -= 1
             self.__ball.set_x (br + 1)
             add = (-direction.dx(),direction.dy())
         elif bx - br <= wall1_x + wall_width:
@@ -91,6 +102,7 @@ class AppPong(App):
                 self.__ball.set_x (wall1_x + wall_width + br)
                 add = (-direction.dx(), direction.dy())
         if bx - br >= self._WINDOW_WIDTH:
+            self.__has_lives -= 1
             self.__ball.set_x (self._WINDOW_WIDTH - br - 1)
             add = (-direction.dx (), direction.dy ())
         elif bx + br >= wall2_x and AppPong.__intersects_square_and_circle ((bx,by), br, (wall2_x, wall2_y), (wall_width, wall_height)):
@@ -98,6 +110,8 @@ class AppPong(App):
             add = (-direction.dx (), direction.dy ())
         if not (add is None):
             self.__ball.set_direction (Directions (dx = add[0], dy = add[1]))
+        if self.__has_lives <= 0:
+            self.__current_state = State.LOSE
     #Проверка клавиатуры
     def __check_player_keyboard (up_key : int, down_key : int, player : PlayerBlock) -> None:
         if pyray.is_key_down(up_key):
@@ -106,6 +120,8 @@ class AppPong(App):
             player.set_direction (DOWN)
     #Куда проще старой логики
     def _check_logic(self) -> None:
+        if self.__current_state != State.DEFAULT:
+            return
         super()._check_logic()
         AppPong.__check_player_keyboard (pyray.KeyboardKey.KEY_UP, pyray.KeyboardKey.KEY_DOWN, self.__right_player)
         AppPong.__check_player_keyboard (pyray.KeyboardKey.KEY_W, pyray.KeyboardKey.KEY_S, self.__left_player)
@@ -118,13 +134,25 @@ class AppPong(App):
         self.__ball.move(self._dt)
     #Отрисовка фона, блоков, мяча, FPS и instruction
     def _draw(self) -> None:
+        if pyray.is_key_released (pyray.KEY_SPACE):
+            if self.__current_state == State.LOSE:
+                self.__has_lives = self.__lives_limit
+            if self.__current_state == State.DEFAULT:
+                self.__current_state = State.STOP
+            else:
+                self.__current_state = State.DEFAULT
         pyray.begin_drawing()
 
         self._draw_background()
         self.__left_player.draw()
         self.__right_player.draw()
         self.__ball.draw()
+        if self.__current_state == State.STOP:
+            pyray.draw_text ("Press SPACE to continue", 460, 390, 10, pyray.RED)
+        elif self.__current_state == State.LOSE:
+            pyray.draw_text ("Press SPACE to restart", 460, 390, 10, pyray.RED)
         pyray.draw_text ("Press W/S to control left block,\n up and down keys for right block", 460, 410, 14, pyray.RED)
+        pyray.draw_text (f"{self.__has_lives}/{self.__lives_limit} remaining", 460, 360, 10, pyray.GREEN)
         pyray.draw_fps (600, 450)
 
         pyray.end_drawing()
