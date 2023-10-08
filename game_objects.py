@@ -35,7 +35,8 @@ class GameObject:
             self,
             x: int, y: int,
             color: pyray.Color,
-            speed: int = 0, direction: Directions = STOP
+            speed: int = 0, direction: Directions = STOP,
+            acceleration : float = 0
     ) -> None:
         if not (type (direction) is Directions):
             raise ValueError ("Invalid direction!!!")
@@ -43,6 +44,7 @@ class GameObject:
         self._y = self._real_y = y
         self._color = color
         self._speed = speed
+        self._acceleration = acceleration
 
         self._direction = direction
 
@@ -91,10 +93,11 @@ class GameObject:
         return self._direction
 
     def move(self, dt: float) -> None:
-        self._real_x += self._speed * self._direction.dx() * dt
+        self._real_x += self._speed * self._direction.dx() * dt + dt * dt * self._acceleration * self._direction.dx() / 2
         self._x = int(self._real_x)
-        self._real_y += self._speed * self._direction.dy() * dt
+        self._real_y += self._speed * self._direction.dy() * dt + dt * dt * self._acceleration * self._direction.dy() / 2
         self._y = int(self._real_y)
+        self._speed += self._acceleration * dt
 
     def draw(self) -> None:
         pass
@@ -146,9 +149,10 @@ class GameObjectCircle(GameObject):
             x: int, y: int,
             r: int,
             color: pyray.Color,
-            speed: int = 0, direction: Directions = STOP
+            speed: int = 0, direction: Directions = STOP,
+            acceleration : float = 0
     ) -> None:
-        super().__init__(x, y, color, speed, direction)
+        super().__init__(x, y, color, speed, direction, acceleration)
 
         self._r = r
 

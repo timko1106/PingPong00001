@@ -9,6 +9,7 @@ from player_block import PlayerBlock
 import game_objects
 from game_objects import Directions, DOWN,UP,LEFT,RIGHT,DOWN_LEFT,DOWN_RIGHT,UP_LEFT,UP_RIGHT,STOP
 import enum
+import math
 
 class State (enum.Enum):
     DEFAULT = 0
@@ -22,7 +23,7 @@ class AppPong(App):
             width: int = 720, height: int = 480,
             title: str = "PONG",
             bg_color: pyray.Color = colors.BLACK,
-            lives_limit : int = 6
+            lives_limit : int = 3
     ) -> None:
         super().__init__(width, height, title, bg_color)
         # Тут задаём значения не сразу, так как нужно получить размеры объекта
@@ -39,9 +40,14 @@ class AppPong(App):
         self.__has_lives = lives_limit
 
         self.__ball = Ball(x=self._WINDOW_WIDTH // 2, y=self._WINDOW_HEIGHT // 2)
+        self.__generate_random_direction()
+    def __generate_random_direction (self) -> None:
         # выбираем случайное направления старта
         # псевдослучайное. Реальная случайность только в квантовой физике
-        self.__ball.set_direction(random.choice([UP_LEFT,UP_RIGHT,DOWN_LEFT,DOWN_RIGHT]))
+        if bool (random.getrandbits(1)):
+            self.__ball.set_direction (game_objects.Directions (angle=-math.pi / 4 + random.uniform (0,1) * math.pi / 2))
+        else:
+            self.__ball.set_direction (game_objects.Directions (angle = 3 * math.pi / 4 + random.uniform (0, 1) * math.pi / 2))
     #Проверка конкретного игрока на коллизии
     def __check_player (player : PlayerBlock, window_height : float, dt : float) -> None:
         py = player.get_y()
@@ -136,6 +142,8 @@ class AppPong(App):
     def _draw(self) -> None:
         if pyray.is_key_released (pyray.KEY_SPACE):
             if self.__current_state == State.LOSE:
+                self.__ball = Ball(x=self._WINDOW_WIDTH // 2, y = self._WINDOW_HEIGHT // 2)
+                self.__generate_random_direction()
                 self.__has_lives = self.__lives_limit
             if self.__current_state == State.DEFAULT:
                 self.__current_state = State.STOP
